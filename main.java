@@ -13,7 +13,9 @@ public class main {
             int choice = s.nextInt();
             switch(choice) {
                 case 1:
-                    System.out.print("Starting the game...");
+                    System.out.print("Starting the game... \n");
+                    game g = new game();
+                    g.runGame();
                     break;
                 case 2:
                     System.out.print("Loading game...");
