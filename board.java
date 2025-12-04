@@ -40,8 +40,8 @@ public class board {
         return grid;
     }
 
-    public boolean placeCreature(int startRow, int startCol, int length, char symbol, boolean horizontal) {
-        if (horizontal) {
+    public boolean placeCreature(int startRow, int startCol, int length, char symbol, boolean horizontal) {  //places a creature
+        if (horizontal) { //checks if the creature fits on the board
             if (startCol + length > cols) {
                 return false;
             } 
@@ -53,11 +53,46 @@ public class board {
         
         for (int i = 0; i < length; i++) {
             int r = startRow + (horizontal ? 0 : i);
+            int c = startCol + (horizontal ? i : 0);
+            if (grid[r][c] != '.') { //checks if the space is already occupied
+                return false;
         }
 
 
+    }
 
+            for (int i = 0; i < length; i++) {
+            int r = startRow + (horizontal ? 0 : i);
+            int c = startCol + (horizontal ? i : 0);
+            grid[r][c] = symbol;
+        }
 
         return true;
     }
+    
+
+    public boolean placeCreatureShape(int startRow, int startCol, creatures shape) {
+
+    for (int[] offset : shape.offsets) {  // 1. Check bounds + collisions
+        int r = startRow + offset[0];
+        int c = startCol + offset[1];
+        
+
+        if (r < 0 || r >= rows || c < 0 || c >= cols) // Board boundary check
+            return false;
+
+        if (grid[r][c] != '.') // Collision check
+            return false;
+    }
+
+    
+    for (int[] offset : shape.offsets) { // 2. Place all segments
+        int r = startRow + offset[0];
+        int c = startCol + offset[1];
+        grid[r][c] = shape.symbol;
+    }
+
+    return true;
+}
+
 }
