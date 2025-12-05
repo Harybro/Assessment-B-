@@ -1,3 +1,4 @@
+
 public class board {
     private int rows;
     private int cols;
@@ -69,7 +70,7 @@ public class board {
 
         return true;
     }
-    
+
 
     public boolean placeCreatureShape(int startRow, int startCol, creatures shape) {
 
@@ -94,5 +95,21 @@ public class board {
 
     return true;
 }
+    public boolean placeCreatureShapeRandom(creatures shape) {
+    java.util.Random rand = new java.util.Random();
+
+    for (int attempts = 0; attempts < 100; attempts++) {
+
+        int row = rand.nextInt(rows);
+        int col = rand.nextInt(cols);
+
+        if (placeCreatureShape(row, col, shape)) {
+            return true; // success
+        }
+    }
+    
+    return false; // failed after many tries
+}
+
 
 }

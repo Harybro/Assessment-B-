@@ -7,19 +7,23 @@ public class creatures {
         this.offsets = offsets;
     }
 
+
+
     public class CreatureLibary {
-
-        creatures vshape = new creatures('v', new int[][] {
-            {0,1},
-            {1,0}, {1,2},
-            {2,1}
+        public static creatures vshape() {
+            return new creatures('v', new int[][] {
+                {0,0}, {0,2},
+                {1,1}
         });
+    }   
 
-        creatures circleshape = new creatures( 'c', new int[][] {
-            {0,1},
+        public static creatures circleshape() {
+            return new creatures( 'c', new int[][] {
+                     {0,1},
             {1,0}, {1,1}, {1,2},
             {2,1}
-        });
+            });
+        }
 
 }
 
