@@ -1,115 +1,134 @@
-
 public class board {
     private int rows;
     private int cols;
     private char[][] grid;
+    private char[][] guessBoard;
 
-    public board(int rows, int cols) { // Constructor 
+    //constructor
+    public board(int rows, int cols) {
         this.rows = rows;
         this.cols = cols;
         this.grid = new char[rows][cols];
         initialiseBoard();
+
+        guessBoard = new char[rows][cols];
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                guessBoard[r][c] = '?';  // unknown to the attacker
+           }
+        }
     }
 
-    private void initialiseBoard() { // Fill the board with default character '.'
-        for (int r = 0; r <rows;r++) {
-            for (int c = 0; c < cols; c++){
-                grid[r][c] = '.';
-                }
-            }
+
+
+    public void displayGuessBoard() {
+    System.out.print("    ");
+    for (int c = 0; c < cols; c++) {
+        System.out.printf("%3d", c);
+    }
+    System.out.println();
+
+    for (int r = 0; r < rows; r++) {
+        System.out.printf("%2d: ", r );
+        for (int c = 0; c < cols; c++) {
+            System.out.printf("%3c", guessBoard[r][c]);
+        }
+        System.out.println();
+    }
+}
+
+    public boolean guess(int row, int col) { // player makes a guess
+
+        // player hit
+        if (grid[row][col] != '.') {
+            guessBoard[row][col] = 'X';
+            return true;
         }
 
+        // player miss
+        guessBoard[row][col] = 'O';
+        return false;
+}
 
-    public void display() { // Display the board
 
+
+
+    private void initialiseBoard() {
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                grid[r][c] = '.';
+            }
+        }
+    }
+
+     //displays the board
+    public void display() {
         System.out.print("    ");
-        for (int c = 0; c < cols; c++) { // Column headers
-            System.out.print(c + " ");
+        for (int c = 0; c < cols; c++) {
+            System.out.printf("%2d", c);
         }
         System.out.println();
 
-        for (int r = 0; r < rows; r++) { // Rows with row headers
-            System.out.print(r + ": ");
-            for (int c = 0; c < cols; c++) { // Print each cell
-                System.out.print(grid[r][c] + " ");
+        for (int r = 0; r < rows; r++) {
+            System.out.printf("%2d: ", r );
+            for (int c = 0; c < cols; c++) {
+                System.out.printf("%2c", grid[r][c]);
             }
             System.out.println();
         }
-
     }
-    public char[][] getGrid() { // Getter for grid
+
+    public char[][] getGrid() {
         return grid;
     }
 
-    public boolean placeCreature(int startRow, int startCol, int length, char symbol, boolean horizontal) {  //places a creature
-        if (horizontal) { //checks if the creature fits on the board
-            if (startCol + length > cols) {
-                return false;
-            } 
-        } else {
-            if (startRow + length > rows) {
-                return false;
-            }
-        }
-        
-        for (int i = 0; i < length; i++) {
-            int r = startRow + (horizontal ? 0 : i);
-            int c = startCol + (horizontal ? i : 0);
-            if (grid[r][c] != '.') { //checks if the space is already occupied
-                return false;
-        }
-
-
+    // ⭐ Add these getters here
+    public int getRows() {
+        return rows;
     }
 
-            for (int i = 0; i < length; i++) {
-            int r = startRow + (horizontal ? 0 : i);
-            int c = startCol + (horizontal ? i : 0);
+    public int getCols() {
+        return cols;
+    }
+
+
+    public boolean placeCreatureShape(int startRow, int startCol, creaturesShape shape, char symbol) {
+
+        int[][] offs = shape.getOffsets();
+
+        // check bounds + collisions
+        for (int[] o : offs) {
+            int r = startRow + o[0];
+            int c = startCol + o[1];
+
+            if (r < 0 || r >= rows || c < 0 || c >= cols) return false;
+            if (grid[r][c] != '.') return false;
+        }
+
+        // place symbols
+        for (int[] o : offs) {
+            int r = startRow + o[0];
+            int c = startCol + o[1];
             grid[r][c] = symbol;
         }
 
         return true;
     }
 
+    public boolean placeCreatureShapeRandom(creaturesShape shape, char symbol) {
+        java.util.Random rand = new java.util.Random();
 
-    public boolean placeCreatureShape(int startRow, int startCol, creatures shape) {
+        for (int attempts = 0; attempts < 100; attempts++) {
 
-    for (int[] offset : shape.offsets) {  // 1. Check bounds + collisions
-        int r = startRow + offset[0];
-        int c = startCol + offset[1];
-        
+            int row = rand.nextInt(rows);
+            int col = rand.nextInt(cols);
 
-        if (r < 0 || r >= rows || c < 0 || c >= cols) // Board boundary check
-            return false;
-
-        if (grid[r][c] != '.') // Collision check
-            return false;
-    }
-
-    
-    for (int[] offset : shape.offsets) { // 2. Place all segments
-        int r = startRow + offset[0];
-        int c = startCol + offset[1];
-        grid[r][c] = shape.symbol;
-    }
-
-    return true;
-}
-    public boolean placeCreatureShapeRandom(creatures shape) {
-    java.util.Random rand = new java.util.Random();
-
-    for (int attempts = 0; attempts < 100; attempts++) {
-
-        int row = rand.nextInt(rows);
-        int col = rand.nextInt(cols);
-
-        if (placeCreatureShape(row, col, shape)) {
-            return true; // success
+            if (placeCreatureShape(row, col, shape, symbol)) {
+                return true;
+            }
         }
-    }
-    
-    return false; // failed after many tries
-}
 
+        return false;
+    }
 
 }
