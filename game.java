@@ -1,4 +1,6 @@
 import java.awt.RadialGradientPaint;
+import java.io.File;
+import java.io.PrintWriter;
 import java.util.List; // Import List interface
 import java.util.ArrayList; // Import ArrayList class
 import java.util.Random;    // Import Random class
@@ -11,10 +13,21 @@ public class game { //class fields
     private List<creature> creatureList; //list of creatures available in the game
     private int player1Score = 0;
     private int player2Score = 0;
+    private String player1Name;
+    private String player2Name;
+
 
     
    
     public game() { //constructor 
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter Player 1 name: ");
+        player1Name = scanner.nextLine();
+
+        System.out.print("Enter Player 2 name: ");
+        player2Name = scanner.nextLine();
+
         player1Board = new board(10, 10); //creates a 10x10 game board
         player2Board = new board(10, 10);
 
@@ -22,13 +35,20 @@ public class game { //class fields
         creatureList = new ArrayList<>(); //creates empty list to hold creatures
 
         // Add some creatures to the list
-        creatureList.add(new creature("Fish", 'F')); 
+        creatureList.add(new creature("Fish", 'F' ));
         creatureList.add(new creature("Shark", 'S'));
         creatureList.add(new creature("Crab", 'C'));
 
     }
 
-
+    //public game(boolean load) {
+    //creatureList = createCreatureList();
+//
+    //if (load) {
+    //    loadGame("save.txt");
+    //}
+    //}
+//
 
     private static final String[] SHAPE_TYPES = { //array of shape type names 
         "Vshape",
@@ -42,7 +62,14 @@ public class game { //class fields
         Random rand = new Random(); //random number generator
         String type = SHAPE_TYPES[rand.nextInt(SHAPE_TYPES.length)];
 
-        creature randomCreature = creatureList.get(rand.nextInt(creatureList.size())); //this picks a random creature for the list
+        creature template = creatureList.get(rand.nextInt(creatureList.size()));
+        if (b.hasCreatureWithSymbol(template.getSymbol())) {
+        return; // skip placing this creature
+        }
+        creature randomCreature = new creature(
+            template.getName(),
+            template.getSymbol()
+        );
 
 
         //randomly choose a shape for the creature
@@ -51,7 +78,7 @@ public class game { //class fields
             case "vshape" -> ShapeLibrary.vShape();
             case "circle" -> ShapeLibrary.circle();
             case "line" -> ShapeLibrary.line();
-            case "horizontalLine" -> ShapeLibrary.horizontalLine();
+           // case "horizontalLine" -> ShapeLibrary.horizontalLine();
             default -> ShapeLibrary.circle(); // fallback
         };
 
@@ -67,16 +94,15 @@ public class game { //class fields
          System.out.println("Failed to place creature after many tries.");
     }
 
-    public void setupBoards() {
-        for (int i = 0; i < 1; i++) {
+    public void setupBoards() { //sets up both players' boards with random creatures
+        for (int i = 0; i < 7; i++) {
             placeRandomCreature(player1Board);
             placeRandomCreature(player2Board);
         }
     }  
 
 
-public void runGame() {
-    setupBoards(); 
+public void runGame() { //main game loop
     Scanner scanner = new Scanner(System.in);
 
     while (true) {
@@ -84,28 +110,45 @@ public void runGame() {
         // ------------------------------
         // PLAYER 1 TURN
         // ------------------------------
-        player2Board.displayGuessBoard();   // what P1 sees
-        player2Board.display();
-        System.out.print("Enter row: ");
-        int row = scanner.nextInt();
-        System.out.print("Enter col: ");
-        int col = scanner.nextInt();
+        System.out.println("\n=====" + player1Name + "====="); 
+        player2Board.displayGuessBoard();  // what P1 sees
+        int row, col;
+        while (true) { //input loop for valid guess
+           row = getValidCoordinate(scanner, "Enter row: ", player2Board.getRows());
+           col = getValidCoordinate(scanner, "Enter column: ", player2Board.getCols());
+        
+           if (player2Board.alreadyGuessed(row, col)) { //check if already guessed
+               System.out.println("You already guessed that position. Try again.");
+           } else {
+               break;
+           }
+        }
 
+        int points = player2Board.guess(row, col); //process the guess and get points
 
-
-        int points = player2Board.guess(row, col);
-
-        if (points > 0) {
+        if (points > 0) { //hit case
             System.out.println("Hit! +" + points + " points");
             player1Score += points;
-        } else {
+        } else { //miss case
             System.out.println("Miss!");
         }
-        System.out.println("Player 1 Score: " + player1Score);
+        System.out.println("Player 1 Score: " + player1Score); //display score
 
-        if (player2Board.allCreaturesDestroyed()) {
-            System.out.println("PLAYER 1 WINS!");
+        if (player2Board.allCreaturesDestroyed()) { //check for win condition
+            System.out.println(player1Name + " WINS!");
             break;
+        }
+
+        System.out.println("Save game? (y/n)"); //ask to save game
+        if (scanner.next().equalsIgnoreCase("y")) {
+            saveGame("save.txt");
+        }
+
+        scanner.nextLine(); // clear input
+
+        System.out.println("Exit? (y/n)"); //ask to exit game
+        if (scanner.next().equalsIgnoreCase("y")) {
+            System. exit(0);
         }
 
 
@@ -115,37 +158,54 @@ public void runGame() {
         // ------------------------------
         // PLAYER 2 TURN
         // ------------------------------
-        System.out.println("\n===== PLAYER 2 TURN =====");
+        System.out.println("\n=====" + player2Name + "=====");
         System.out.println("Your Guess Board:");
         player1Board.displayGuessBoard();   // what P2 sees
 
-        System.out.print("Enter row: ");
-        row = scanner.nextInt();
-        System.out.print("Enter col: ");
-        col = scanner.nextInt();
+        while (true) { //input loop for valid guess
+           row = getValidCoordinate(scanner, "Enter row: ", player2Board.getRows());
+           col = getValidCoordinate(scanner, "Enter column: ", player2Board.getCols());
+        
+           if (player2Board.alreadyGuessed(row, col)) { //check if already guessed
+               System.out.println("You already guessed that position. Try again.");
+           } else {
+               break;
+           }
+        }
 
-        if (player1Board.allCreaturesDestroyed()) {
-            System.out.println("PLAYER 2 WINS!");
+        if (player1Board.allCreaturesDestroyed()) { //check for win condition
+            System.out.println(player2Name + "WINS!");
             break;
     }
 
-        if (player1Board.guess(row, col) != 0) {
+        if (player1Board.guess(row, col) != 0) { //process the guess
             System.out.println("Hit!");
         } else {
             System.out.println("Miss!");
         }
 
-        if (player2Board.allCreaturesFound()) {
+        if (player2Board.allCreaturesDestroyed()) { //check for win condition
             System.out.println("PLAYER 1 WINS!");
             break;
     }
+
+        System.out.println("Save game? (y/n)"); //ask to save game
+        if (scanner.next().equalsIgnoreCase("y")) {
+            saveGame("save.txt");
+        }
+        scanner.nextLine(); // clear input
+
+        System.out.println("Exit? (y/n)"); //ask to exit game
+        if (scanner.next().equalsIgnoreCase("y")) {
+            System. exit(0);
+        }
 
         pause(scanner);
     }
 }
 
 
-    private void pause(Scanner scanner) {
+    private void pause(Scanner scanner) { //pauses the game until user presses ENTER
         System.out.println("Press ENTER to continue...");
         scanner.nextLine();  // consumes leftover input
         scanner.nextLine();  // waits for actual ENTER
@@ -153,7 +213,63 @@ public void runGame() {
         System.out.flush(); // flush the console
     }
 
+    public void saveGame(String file) { //saves the current game state to a file
+    try (PrintWriter out = new PrintWriter(file)) { 
+        out.println(player1Score);
+        out.println(player2Score);
+        player1Board.save(out);
+        player2Board.save(out);
+    } catch (Exception e) { //handle exceptions
+        System.out.println("Save failed: " + e.getMessage());
+    }
+}
 
-    
+
+public void loadGame(String file) { //loads a game state from a file
+    try (Scanner in = new Scanner(new File(file))) { 
+        player1Score = Integer.parseInt(in.nextLine());
+        player2Score = Integer.parseInt(in.nextLine());
+        player1Board.load(in);
+        player2Board.load(in);
+        runGame();
+    } catch (Exception e) { //handle exceptions
+        System.out.println("Load failed: " + e.getMessage());
+    }
+}
+
+public void askForNames() { //asks players for their names
+    Scanner scanner = new Scanner(System.in);
+    System.out.print("Enter Player 1 name: ");
+    player1Name = scanner.nextLine();
+
+    System.out.print("Enter Player 2 name: ");
+    player2Name = scanner.nextLine();
+}
+
+private int getValidInt(Scanner scanner, String prompt) { //gets a valid integer from user input
+    while (true) {
+        System.out.print(prompt);
+        if (scanner.hasNextInt()) { //check if input is an integer
+            int value = scanner.nextInt();
+            return value;
+        } else { //invalid input case
+            System.out.println("Invalid input. Please enter a number.");
+            scanner.next(); // discard invalid input
+        }
+    }
+}
+
+private int getValidCoordinate(Scanner scanner, String prompt, int max) { //gets a valid coordinate within bounds
+    while (true) {
+        int value = getValidInt(scanner, prompt);
+        if (value >= 0 && value < max) {
+            return value;
+        } else {
+            System.out.println("Please enter a value between 0 and " + (max - 1));
+        }
+    }
+}
+
+
 
 }

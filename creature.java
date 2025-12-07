@@ -1,36 +1,48 @@
 public class creature {
 
+    //attributes
     private String name; 
     private char symbol;
 
-    private creaturesShape shape;  // shape assigned AT PLACEMENT time
     private int totalParts;
-    private int hitCount = 0;
+    private int hitCount;
 
-    public creature(String name, char symbol) {
+    public creature(String name, char symbol) { //constructor
         this.name = name;
         this.symbol = symbol;
-        this.shape = null;        // will be assigned when placed
-        this.totalParts = 0;      // will be calculated when placed
+        this.totalParts = totalParts;
+        this.hitCount = 0;
     }
 
-    public void assignShape(creaturesShape shape) {
-        this.shape = shape;
-        this.totalParts = shape.getOffsets().length;
+    public void setTotalParts(int totalParts) { //sets total parts of the creature
+        this.totalParts = totalParts;
     }
 
-    public void addHit() {
-        if (hitCount < totalParts) {
-            hitCount++;
-        }
+    public void addHit() { //increments hit count when creature is hit
+        hitCount++;
     }
 
-    public boolean isDestroyed() {
+    public boolean isDestroyed() { //checks if creature is destroyed
         return hitCount >= totalParts;
     }
 
-    // getters
-    public char getSymbol() { return symbol; }
-    public creaturesShape getShape() { return shape; }
-    public String getName() { return name; }
+    public void setHitCount(int hits) { //sets hit count
+        this.hitCount = hits;
+    }
+
+    public int getHitCount() { //returns current hit count
+        return hitCount;
+    }
+
+    public int getTotalParts() { //returns total parts of the creature
+        return totalParts;
+    }
+
+    public String getName() { //returns creature name
+        return name;
+    }
+
+    public char getSymbol() { //returns creature symbol
+        return symbol;
+    }
 }
