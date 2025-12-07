@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.List;
+
 public class board {
     private int rows;
     private int cols;
@@ -37,18 +40,41 @@ public class board {
     }
 }
 
-    public boolean guess(int row, int col) { // player makes a guess
+    public int guess(int row, int col) {
+    char cell = grid[row][col];
 
-        // player hit
-        if (grid[row][col] != '.') {
-            guessBoard[row][col] = 'X';
-            return true;
+    // If already guessed before, no score
+    if (cell == 'M' || cell == 'H') {
+        return 0;
+    }
+
+    // MISS
+    if (cell == '.') {
+        grid[row][col] = 'M';
+        return 0;
+    }
+
+    // HIT a creature
+    grid[row][col] = 'H';
+
+    // find creature
+    for (creature c : creaturesOnBoard) {
+        if (c.getSymbol() == cell) {
+            c.addHit();
+
+            if (c.isDestroyed()) {
+                System.out.println("You destroyed the " + c.getName() + "!");
+                return 10; // 5 hit + 5 bonus
+            }
+
+            return 5; // normal hit
         }
+    }
 
-        // player miss
-        guessBoard[row][col] = 'O';
-        return false;
-}
+    return 0;
+    }
+
+
 
 
 
@@ -92,30 +118,33 @@ public class board {
     }
 
 
-    public boolean placeCreatureShape(int startRow, int startCol, creaturesShape shape, char symbol) {
+    public boolean placeCreatureShape(int startRow, int startCol, creaturesShape shape, char symbol, creature c) {
 
         int[][] offs = shape.getOffsets();
 
         // check bounds + collisions
         for (int[] o : offs) {
             int r = startRow + o[0];
-            int c = startCol + o[1];
+            int cCol = startCol + o[1];
 
-            if (r < 0 || r >= rows || c < 0 || c >= cols) return false;
-            if (grid[r][c] != '.') return false;
+            if (r < 0 || r >= rows || cCol < 0 || cCol >= cols) return false;
+            if (grid[r][cCol] != '.') return false;
         }
 
         // place symbols
         for (int[] o : offs) {
             int r = startRow + o[0];
-            int c = startCol + o[1];
-            grid[r][c] = symbol;
+            int cCol = startCol + o[1];
+            grid[r][cCol] = symbol;
         }
+
+        c.assignShape(shape);
+        addCreatureToBoard(c);
 
         return true;
     }
 
-    public boolean placeCreatureShapeRandom(creaturesShape shape, char symbol) {
+    public boolean placeCreatureShapeRandom(creaturesShape shape, char symbol, creature c) {
         java.util.Random rand = new java.util.Random();
 
         for (int attempts = 0; attempts < 100; attempts++) {
@@ -123,12 +152,39 @@ public class board {
             int row = rand.nextInt(rows);
             int col = rand.nextInt(cols);
 
-            if (placeCreatureShape(row, col, shape, symbol)) {
+            if (placeCreatureShape(row, col, shape, symbol, c)) {
                 return true;
             }
         }
 
         return false;
     }
+
+    public boolean allCreaturesFound() {
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < cols; c++) {
+            char ch = grid[r][c];
+            // If we find any creature letters (not '.', 'M', '*'), game still ongoing
+            if (ch != '.' && ch != 'M' && ch != '*') return false;
+        }
+    }
+    return true;
+}
+
+public boolean allCreaturesDestroyed() {
+    for (creature c : creaturesOnBoard) {
+        if (!c.isDestroyed()) return false;
+    }
+    return true;
+}
+
+
+private List<creature> creaturesOnBoard = new ArrayList<>();
+
+public void addCreatureToBoard(creature c) {
+    creaturesOnBoard.add(c);
+}
+
+
 
 }
